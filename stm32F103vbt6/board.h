@@ -41,7 +41,7 @@
 /*
  * IO pins assignments.
  */
-#define GPIOA_PA00  0
+#define GPIOA_PA00_TOUCH_BUTTON  0
 #define GPIOA_PA01  1
 #define GPIOA_PA02  2
 #define GPIOA_PA03  3
@@ -54,8 +54,8 @@
 #define GPIOA_PA10_USART1_RX  10
 #define GPIOA_PA11  11
 #define GPIOA_PA12  12
-#define GPIOA_PA13  13
-#define GPIOA_PA14  14
+#define GPIOA_PA13_SWDIO  13
+#define GPIOA_PA14_SWCLK  14
 #define GPIOA_PA15  15
 
 #define GPIOB_PB00  0
@@ -63,15 +63,15 @@
 #define GPIOB_PB02  2
 #define GPIOB_PB03  3
 #define GPIOB_PB04  4
-#define GPIOB_PB05  5
+#define GPIOB_PB05_CONTACT_BUMPER_L  5
 #define GPIOB_PB06  6
-#define GPIOB_PB07  7
+#define GPIOB_PB07_MOT_L_PHASE  7
 #define GPIOB_PB08  8
 #define GPIOB_PB09  9
 #define GPIOB_PB10  10
-#define GPIOB_PB11  11
+#define GPIOB_PB11_IC_FRONTRIGHT  11
 #define GPIOB_PB12  12
-#define GPIOB_PB13  13
+#define GPIOB_PB13_SPI2_SCK  13
 #define GPIOB_PB14  14
 #define GPIOB_PB15  15
 
@@ -82,10 +82,10 @@
 #define GPIOC_PC03  3
 #define GPIOC_PC04  4
 #define GPIOC_PC05  5
-#define GPIOC_PC06  6
-#define GPIOC_PC07  7
-#define GPIOC_PC08  8
-#define GPIOC_PC09  9
+#define GPIOC_PC06_MOT_R_ENABLE  6 /*TIM3_CH1*/
+#define GPIOC_PC07  7 /*должна быть боковая щётка но нет*/
+#define GPIOC_PC08_MOT_L_ENABLE  8 /*TIM3_CH3*/
+#define GPIOC_PC09_MAIN_BRUSH_ENABLE  9 /*TIM3_CH4*/
 #define GPIOC_PC10  10
 #define GPIOC_PC11  11
 #define GPIOC_PC12  12
@@ -94,37 +94,37 @@
 #define GPIOC_PC15  15
 
 
-#define GPIOD_PD00  0
-#define GPIOD_PD01  1
+#define GPIOD_PD00_XTAL  0
+#define GPIOD_PD01_XTAL  1
 #define GPIOD_PD02  2
-#define GPIOD_PD03  3
-#define GPIOD_PD04  4
+#define GPIOD_PD03_ENC_L  3
+#define GPIOD_PD04_IC_REAR  4
 #define GPIOD_PD05  5
 #define GPIOD_PD06  6
 #define GPIOD_PD07  7
 #define GPIOD_PD08  8
 #define GPIOD_PD09  9
-#define GPIOD_PD10  10
+#define GPIOD_PD10_MOT_R_GROUND  10
 #define GPIOD_PD11  11
 #define GPIOD_PD12  12
-#define GPIOD_PD13  13
+#define GPIOD_PD13_IC_LEFT  13
 #define GPIOD_PD14  14
 #define GPIOD_PD15  15
 
-#define GPIOE_PE00  0
+#define GPIOE_PE00_BUG_LEFT_MAGNET  0
 #define GPIOE_PE01  1
 #define GPIOE_PE02  2
-#define GPIOE_PE03  3
-#define GPIOE_PE04  4
-#define GPIOE_PE05  5
-#define GPIOE_PE06  6
+#define GPIOE_PE03_MOT_L_GROUND  3
+#define GPIOE_PE04_BUG_RIGHT_MAGNET  4
+#define GPIOE_PE05_SLEEP  5
+#define GPIOE_PE06_IC_RIGHT  6
 #define GPIOE_PE07  7
-#define GPIOE_PE08  8
+#define GPIOE_PE08_ENC_R  8
 #define GPIOE_PE09  9
-#define GPIOE_PE10  10
+#define GPIOE_PE10_IC_FRONTLEFT  10
 #define GPIOE_PE11  11
-#define GPIOE_PE12  12
-#define GPIOE_PE13  13
+#define GPIOE_PE12_CONTACT_BUMPER_R  12
+#define GPIOE_PE13_MOT_R_PHASE  13
 #define GPIOE_PE14  14
 #define GPIOE_PE15  15
 
@@ -161,9 +161,9 @@
  * PA11 - Normal input      (USB DM).
  * PA12 - Normal input      (USB DP).
  */
-#define VAL_GPIOACRL            0x88888888      /*  PA7...PA0 */
-#define VAL_GPIOACRH            0x888884B8      /* PA15...PA8 */
-#define VAL_GPIOAODR            0xFFFFFFFF
+#define VAL_GPIOACRL            0x44444444      /*  PA7...PA0 */
+#define VAL_GPIOACRH            0x444444B4      /* PA15...PA8 */
+#define VAL_GPIOAODR            0x00000000
 
 /*
  * Port B setup.
@@ -172,9 +172,9 @@
  * PB14 - Normal input      (MMC SPI2 MISO).
  * PB15 - Alternate output  (MMC SPI2 MOSI).
  */
-#define VAL_GPIOBCRL            0x88888888      /*  PB7...PB0 */
-#define VAL_GPIOBCRH            0x88888888      /* PB15...PB8 */
-#define VAL_GPIOBODR            0xFFFFFFFF
+#define VAL_GPIOBCRL            0x24444444      /*  PB7...PB0 */
+#define VAL_GPIOBCRH            0x44444444      /* PB15...PB8 */
+#define VAL_GPIOBODR            0x00000000
 
 /*
  * Port C setup.
@@ -186,9 +186,9 @@
  * PC11 - Push Pull output (USB DISC).
  * PC12 - Push Pull output (LED).
  */
-#define VAL_GPIOCCRL            0x88888888      /*  PC7...PC0 */
-#define VAL_GPIOCCRH            0x88888888      /* PC15...PC8 */
-#define VAL_GPIOCODR            0xFFFFFFFF
+#define VAL_GPIOCCRL            0x4A444444      /*  PC7...PC0 */
+#define VAL_GPIOCCRH            0x444444AA      /* PC15...PC8 */
+#define VAL_GPIOCODR            0x00000000
 
 /*
  * Port D setup.
@@ -196,17 +196,17 @@
  * PD0  - Normal input (XTAL).
  * PD1  - Normal input (XTAL).
  */
-#define VAL_GPIODCRL            0x88888844      /*  PD7...PD0 */
-#define VAL_GPIODCRH            0x88888888      /* PD15...PD8 */
-#define VAL_GPIODODR            0xFFFFFFFF
+#define VAL_GPIODCRL            0x44444444      /*  PD7...PD0 */
+#define VAL_GPIODCRH            0x44444444      /* PD15...PD8 */
+#define VAL_GPIODODR            0x00000000
 
 /*
  * Port E setup.
  * Everything input with pull-up except:
  */
-#define VAL_GPIOECRL            0x88888888      /*  PE7...PE0 */
-#define VAL_GPIOECRH            0x88888888      /* PE15...PE8 */
-#define VAL_GPIOEODR            0xFFFFFFFF
+#define VAL_GPIOECRL            0x44244444      /*  PE7...PE0 */
+#define VAL_GPIOECRH            0x44244444      /* PE15...PE8 */
+#define VAL_GPIOEODR            0x00000000
 
 /*
  * USB bus activation macro, required by the USB driver.
