@@ -42,13 +42,13 @@
  * IO pins assignments.
  */
 #define GPIOA_PA00_TOUCH_BUTTON  0
-#define GPIOA_PA01  1
-#define GPIOA_PA02  2
-#define GPIOA_PA03_GROUND_SENSOR_RIGHT  3
-#define GPIOA_PA04  4
-#define GPIOA_PA05  5
-#define GPIOA_PA06  6
-#define GPIOA_PA07  7
+#define GPIOA_PA01  1 /*ADC12_IN1*/
+#define GPIOA_PA02  2 /*ADC12_IN2*/
+#define GPIOA_PA03_GROUND_SENSOR_RIGHT  3 /*ADC12_IN3*/
+#define GPIOA_PA04  4 /*ADC12_IN4*/
+#define GPIOA_PA05  5 /*ADC12_IN5*/
+#define GPIOA_PA06  6 /*ADC12_IN6*/
+#define GPIOA_PA07  7 /*ADC12_IN7*/
 #define GPIOA_PA08_SIDE_BRUSH_ENABLE  8
 #define GPIOA_PA09_USART1_TX  9
 #define GPIOA_PA10_USART1_RX  10
@@ -59,7 +59,7 @@
 #define GPIOA_PA15  15
 
 #define GPIOB_PB00  0
-#define GPIOB_PB01  1
+#define GPIOB_PB01  1 /*ADC12_IN9*/
 #define GPIOB_PB02  2
 #define GPIOB_PB03  3
 #define GPIOB_PB04  4
@@ -76,8 +76,8 @@
 #define GPIOB_PB15  15
 
 
-#define GPIOC_PC00  0                    /*ADC12_IN10*/
-#define GPIOC_PC01_GROUND_SENSOR_LEFT  1 /*ADC12_IN11*/
+#define GPIOC_PC00  0                         /*ADC12_IN10*/
+#define GPIOC_PC01_GROUND_SENSOR_LEFT  1      /*ADC12_IN11*/
 #define GPIOC_PC02_GROUND_SENSOR_FRONTLEFT  2 /*ADC12_IN12*/
 #define GPIOC_PC03  3                         /*ADC12_IN13*/
 #define GPIOC_PC04_GROUND_SENSOR_FRONTRIGHT  4 /*ADC12_IN14*/
@@ -96,7 +96,7 @@
 
 #define GPIOD_PD00  0
 #define GPIOD_PD01  1
-#define GPIOD_PD02  2
+#define GPIOD_PD02_ENC_CASTER_WHEEL  2
 #define GPIOD_PD03_ENC_L  3
 #define GPIOD_PD04_IC_REAR  4
 #define GPIOD_PD05  5

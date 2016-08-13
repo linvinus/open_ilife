@@ -21,6 +21,67 @@
 
 int FPORT=-1,FPAD=-1;
 
+//~ static
+adcsample_t adc1_samples_buf[16]; // results array
+
+//~ static
+ADCConversionGroup bldc_adc1_grp_for_tim1 = {
+	// set to TRUE if need circular buffer, set FALSE otherwise
+    FALSE,
+	// number of channels
+    (uint16_t)(16),
+	// callback function, set to NULL for begin
+    NULL,
+    NULL,
+  /* HW dependent part */
+  // Resent fields are stm32 specific. They contain ADC control registers data.
+  // Please, refer to ST manual RM0008.pdf to understand what we do
+  // CR1 register content, set to zero for begin
+    0,
+  // CR2 register content, set to zero for begin
+    ADC_CR2_TSVREFE,
+  // SMRP1 register content, set to zero for begin
+    ADC_SMPR1_SMP_AN10(ADC_SAMPLE_41P5)|
+    ADC_SMPR1_SMP_AN11(ADC_SAMPLE_41P5)|
+    ADC_SMPR1_SMP_AN12(ADC_SAMPLE_41P5)|
+    ADC_SMPR1_SMP_AN13(ADC_SAMPLE_41P5)|
+    ADC_SMPR1_SMP_AN14(ADC_SAMPLE_41P5)|
+    ADC_SMPR1_SMP_AN15(ADC_SAMPLE_41P5),
+  // SMRP2 register content, set to zero for begin
+    ADC_SMPR2_SMP_AN0(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN1(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN2(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN3(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN4(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN5(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN6(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN7(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN8(ADC_SAMPLE_41P5)|
+    ADC_SMPR2_SMP_AN9(ADC_SAMPLE_41P5),
+  // SQR1 register content. Set channel sequence length
+    ADC_SQR1_NUM_CH(16)|
+    ADC_SQR1_SQ13_N(ADC_CHANNEL_IN12)|
+    ADC_SQR1_SQ14_N(ADC_CHANNEL_IN13)|
+    ADC_SQR1_SQ15_N(ADC_CHANNEL_IN14)|
+    ADC_SQR1_SQ16_N(ADC_CHANNEL_IN15),
+  // SQR2 register content, set to zero for begin
+    ADC_SQR2_SQ7_N(ADC_CHANNEL_IN6)|
+    ADC_SQR2_SQ8_N(ADC_CHANNEL_IN7)|
+    ADC_SQR2_SQ9_N(ADC_CHANNEL_IN8)|
+    ADC_SQR2_SQ10_N(ADC_CHANNEL_IN9)|
+    ADC_SQR2_SQ11_N(ADC_CHANNEL_IN10)|
+    ADC_SQR2_SQ12_N(ADC_CHANNEL_IN11),
+  // SQR3 register content. We must select 6 channels
+    ADC_SQR3_SQ1_N(ADC_CHANNEL_IN0)|
+    ADC_SQR3_SQ2_N(ADC_CHANNEL_IN1)|
+    ADC_SQR3_SQ3_N(ADC_CHANNEL_IN2)|
+    ADC_SQR3_SQ4_N(ADC_CHANNEL_IN3)|
+    ADC_SQR3_SQ5_N(ADC_CHANNEL_IN4)|
+    ADC_SQR3_SQ6_N(ADC_CHANNEL_IN5)
+};
+
+
+
 #define BLDCM_FREQ    72000000 /*CK_CNT=72000000 0.0000156250 s*/
 #define BLDCM_PERIOD  3500
 
@@ -207,15 +268,23 @@ int main(void) {
   //~ chThdSleepMilliseconds(500);
   //~ palClearPad(GPIOC, GPIOC_PC06_MOT_R_ENABLE);
 
-  palSetPadMode(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX, PAL_MODE_OUTPUT_PUSHPULL);
-
   //~ palSetPadMode(GPIOC, GPIOC_PC07, PAL_MODE_OUTPUT_PUSHPULL);//SLEEP OK
   //~ palSetPad(GPIOC, GPIOC_PC07);
+
+  //~ palSetPadMode(GPIOC, GPIOC_PC00, PAL_MODE_INPUT_ANALOG);//SLEEP OK
+  //~ palSetPadMode(GPIOC, GPIOC_PC03, PAL_MODE_INPUT_ANALOG);//SLEEP OK
+  //~ palSetPadMode(GPIOC, GPIOC_PC05, PAL_MODE_INPUT_ANALOG);//SLEEP OK
 
   pwmStart(&PWMD3, &pwm_bldc_cfg);
 
   pwmEnableChannel(&PWMD3, 0,3500/4);//tim3-ch1
   pwmEnableChannel(&PWMD3, 2,3500/4);//tim3-ch3
+
+  adcStart(&ADCD1, NULL);
+
+  palSetPadMode(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX, PAL_MODE_OUTPUT_PUSHPULL);
+  //~ palClearPad(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX);
+
 
   /*
    * Normal main() thread activity, in this demo it does nothing except
@@ -223,10 +292,21 @@ int main(void) {
    * pressed the test procedure is launched.
    */
   while (true) {
-    compare_pads();
-    chThdSleepMilliseconds(100);
+    //~ compare_pads();
     palTogglePort(GPIOB, 1<<GPIOB_PB10_GROUND_SENSORS_TX);
-
+    int i;
+    palClearPad(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX);
+    chThdSleepMilliseconds(1);
+    palSetPad(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX);
+    adcStartConversion(&ADCD1,
+                       &bldc_adc1_grp_for_tim1,
+                       adc1_samples_buf,
+                       1);
+    for(i=0;i<16;i++){
+      chprintf(&SD1, "%02d=%04d ",i,adc1_samples_buf[i]);
+    }
+    chprintf(&SD1, "\r\n");
+    chThdSleepMilliseconds(500);
     //~ if (sdGetTimeout(&SD1,MS2ST(100))>0){
       //~ test_pad();
     //~ }//else{
