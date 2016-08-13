@@ -44,7 +44,7 @@
 #define GPIOA_PA00_TOUCH_BUTTON  0
 #define GPIOA_PA01  1
 #define GPIOA_PA02  2
-#define GPIOA_PA03  3
+#define GPIOA_PA03_GROUND_SENSOR_RIGHT  3
 #define GPIOA_PA04  4
 #define GPIOA_PA05  5
 #define GPIOA_PA06  6
@@ -68,7 +68,7 @@
 #define GPIOB_PB07_MOT_L_PHASE  7
 #define GPIOB_PB08  8
 #define GPIOB_PB09  9
-#define GPIOB_PB10  10
+#define GPIOB_PB10_GROUND_SENSORS_TX  10
 #define GPIOB_PB11_IC_FRONTRIGHT  11
 #define GPIOB_PB12  12
 #define GPIOB_PB13_SPI2_SCK  13
@@ -76,12 +76,12 @@
 #define GPIOB_PB15  15
 
 
-#define GPIOC_PC00  0
-#define GPIOC_PC01  1
-#define GPIOC_PC02  2
-#define GPIOC_PC03  3
-#define GPIOC_PC04  4
-#define GPIOC_PC05  5
+#define GPIOC_PC00  0                    /*ADC12_IN10*/
+#define GPIOC_PC01_GROUND_SENSOR_LEFT  1 /*ADC12_IN11*/
+#define GPIOC_PC02_GROUND_SENSOR_FRONTLEFT  2 /*ADC12_IN12*/
+#define GPIOC_PC03  3                         /*ADC12_IN13*/
+#define GPIOC_PC04_GROUND_SENSOR_FRONTRIGHT  4 /*ADC12_IN14*/
+#define GPIOC_PC05  5                         /*ADC12_IN15*/
 #define GPIOC_PC06_MOT_R_ENABLE  6 /*TIM3_CH1*/
 #define GPIOC_PC07  7 /*должна быть боковая щётка но нет*/
 #define GPIOC_PC08_MOT_L_ENABLE  8 /*TIM3_CH3*/
@@ -105,7 +105,7 @@
 #define GPIOD_PD08  8
 #define GPIOD_PD09  9
 #define GPIOD_PD10_MOT_R_GROUND  10
-#define GPIOD_PD11  11
+#define GPIOD_PD11_TOUCH_BUTTON_COLOR_1  11
 #define GPIOD_PD12  12
 #define GPIOD_PD13_IC_LEFT  13
 #define GPIOD_PD14  14
@@ -122,7 +122,7 @@
 #define GPIOE_PE08_ENC_R  8
 #define GPIOE_PE09  9
 #define GPIOE_PE10_IC_FRONTLEFT  10
-#define GPIOE_PE11  11
+#define GPIOE_PE11_TOUCH_BUTTON_COLOR_2  11
 #define GPIOE_PE12_CONTACT_BUMPER_R  12
 #define GPIOE_PE13_MOT_R_PHASE  13
 #define GPIOE_PE14  14
