@@ -74,22 +74,22 @@ void sd_flush(SerialDriver *sdp){
 int port_state[5]={0,0,0,0,0};
 GPIO_TypeDef *GPIOS[5]={GPIOA,GPIOB,GPIOC,GPIOD,GPIOE};
 int mask[5]={
-            1<<GPIOA_PA09_USART1_TX | 1<<GPIOA_PA10_USART1_RX | 1<<GPIOA_PA00_TOUCH_BUTTON | 1<<GPIOA_PA13_SWDIO | 1<<GPIOA_PA14_SWCLK,
-            1<<GPIOB_PB07_MOT_L_PHASE | 1<<GPIOB_PB13_SPI2_SCK | 1<<GPIOB_PB05_CONTACT_BUMPER_L | 1<<GPIOB_PB11_IC_FRONTRIGHT,
+            1<<GPIOA_PA09_USART1_TX | 1<<GPIOA_PA10_USART1_RX | 1<<GPIOA_PA00_TOUCH_BUTTON | 1<<GPIOA_PA13_SWDIO | 1<<GPIOA_PA14_SWCLK | 1<<GPIOA_PA08_SIDE_BRUSH_ENABLE | 1<<GPIOA_PA11_BEEPER,
+            1<<GPIOB_PB07_MOT_L_PHASE | 1<<GPIOB_PB13_SPI2_SCK | 1<<GPIOB_PB05_CONTACT_BUMPER_L | 1<<GPIOB_PB11_IC_FRONTRIGHT | 1<<GPIOB_PB14_TOURBINE_ENABLE,
             1<<GPIOC_PC06_MOT_R_ENABLE | 1<<GPIOC_PC08_MOT_L_ENABLE | 1<<GPIOC_PC09_MAIN_BRUSH_ENABLE,
-            1<<GPIOD_PD00_XTAL | 1<<GPIOD_PD01_XTAL | 1<<GPIOD_PD03_ENC_L | 1<<GPIOD_PD10_MOT_R_GROUND | 1<<GPIOD_PD04_IC_REAR | 1<<GPIOD_PD13_IC_LEFT,
+            1<<GPIOD_PD03_ENC_L | 1<<GPIOD_PD10_MOT_R_GROUND | 1<<GPIOD_PD04_IC_REAR | 1<<GPIOD_PD13_IC_LEFT,
             1<<GPIOE_PE05_SLEEP | 1<<GPIOE_PE13_MOT_R_PHASE | 1<<GPIOE_PE08_ENC_R | 1<<GPIOE_PE12_CONTACT_BUMPER_R | 1<<GPIOE_PE03_MOT_L_GROUND | 1<<GPIOE_PE06_IC_RIGHT | 1<<GPIOE_PE10_IC_FRONTLEFT | 1<<GPIOE_PE00_BUG_LEFT_MAGNET | 1<<GPIOE_PE04_BUG_RIGHT_MAGNET
             };
 
 
 void test_pad(){
-  int i,j;
+  int i,j,k;
   FPORT=-1;
   FPAD=-1;
 
   palSetPadMode(GPIOB, GPIOB_PB13_SPI2_SCK, PAL_MODE_INPUT_PULLDOWN);//TEST PAD
   chprintf(&SD1, "PREPARE TEST\r\n");
-  chThdSleepMilliseconds(10000);
+  //~ chThdSleepMilliseconds(10000);
   chprintf(&SD1, "TESTING...\r\n");
   for(i=0;i<5;i++){
     for(j=0;j<16;j++){
@@ -112,8 +112,12 @@ void test_pad(){
       sd_flush(&SD1);
 
       palSetPadMode(GPIOS[i], j, PAL_MODE_OUTPUT_PUSHPULL);
-      palSetPad(GPIOS[i], j);
-      chThdSleepMilliseconds(1);
+      for(k=0;k<10;k++){
+        palSetPad(GPIOS[i], j);
+        chThdSleepMilliseconds(10);
+        palClearPad(GPIOS[i], j);
+        chThdSleepMilliseconds(10);
+      }
 
       if( palReadPad(GPIOB, GPIOB_PB13_SPI2_SCK) > 0){
         FPORT=i;
@@ -124,6 +128,7 @@ void test_pad(){
        }
       palClearPad(GPIOS[i], j);
       palSetPadMode(GPIOS[i], j, PAL_MODE_INPUT);
+      sdGet(&SD1);//wait for key
     }
   }
   chprintf(&SD1, "TEST DONE\r\n");
@@ -216,12 +221,12 @@ int main(void) {
    * pressed the test procedure is launched.
    */
   while (true) {
-    compare_pads();
+    //~ compare_pads();
     //~ chThdSleepMilliseconds(50);
-    //~ if (sdGetTimeout(&SD1,MS2ST(50))>0){
-      //~ test_pad();
-      //~ compare_pads();
-    //~ }else{
+
+    if (sdGetTimeout(&SD1,MS2ST(100))>0){
+      test_pad();
+    }//else{
       //~ chThdSleepMilliseconds(500);
     //~ }
   }

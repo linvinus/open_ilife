@@ -49,10 +49,10 @@
 #define GPIOA_PA05  5
 #define GPIOA_PA06  6
 #define GPIOA_PA07  7
-#define GPIOA_PA08  8
+#define GPIOA_PA08_SIDE_BRUSH_ENABLE  8
 #define GPIOA_PA09_USART1_TX  9
 #define GPIOA_PA10_USART1_RX  10
-#define GPIOA_PA11  11
+#define GPIOA_PA11_BEEPER  11
 #define GPIOA_PA12  12
 #define GPIOA_PA13_SWDIO  13
 #define GPIOA_PA14_SWCLK  14
@@ -72,7 +72,7 @@
 #define GPIOB_PB11_IC_FRONTRIGHT  11
 #define GPIOB_PB12  12
 #define GPIOB_PB13_SPI2_SCK  13
-#define GPIOB_PB14  14
+#define GPIOB_PB14_TOURBINE_ENABLE  14
 #define GPIOB_PB15  15
 
 
@@ -94,8 +94,8 @@
 #define GPIOC_PC15  15
 
 
-#define GPIOD_PD00_XTAL  0
-#define GPIOD_PD01_XTAL  1
+#define GPIOD_PD00  0
+#define GPIOD_PD01  1
 #define GPIOD_PD02  2
 #define GPIOD_PD03_ENC_L  3
 #define GPIOD_PD04_IC_REAR  4
