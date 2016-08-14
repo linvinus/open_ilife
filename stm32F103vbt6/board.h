@@ -41,92 +41,92 @@
 /*
  * IO pins assignments.
  */
-#define GPIOA_PA00_TOUCH_BUTTON  0
-#define GPIOA_PA01  1 /*ADC12_IN1*/
-#define GPIOA_PA02  2 /*ADC12_IN2*/
+#define GPIOA_PA00_TOUCH_BUTTON  0      /*ADC12_IN0 (digital)*/
+#define GPIOA_PA01_CHARGER_VOLTAGE  1   /*ADC12_IN1 charger_voltage*/
+#define GPIOA_PA02_BATT_VOLTAGE  2      /*ADC12_IN2 batt_voltage*/
 #define GPIOA_PA03_GROUND_SENSOR_RIGHT  3 /*ADC12_IN3*/
-#define GPIOA_PA04  4 /*ADC12_IN4*/
-#define GPIOA_PA05  5 /*ADC12_IN5*/
-#define GPIOA_PA06  6 /*ADC12_IN6*/
-#define GPIOA_PA07  7 /*ADC12_IN7*/
-#define GPIOA_PA08_SIDE_BRUSH_ENABLE  8
+#define GPIOA_PA04_TOURBINE_CURRENT  4  /*ADC12_IN4*/
+#define GPIOA_PA05_ICBUMPER_CENTER  5   /*ADC12_IN5, 3 phototransistors in parallel*/
+#define GPIOA_PA06_BRUSH_CURRENT  6     /*ADC12_IN6*/
+#define GPIOA_PA07_BATT_CURRENT  7      /*ADC12_IN7 current sensor*/
+#define GPIOA_PA08_SIDE_BRUSH_ENABLE  8 /*TIM1_CH1*/
 #define GPIOA_PA09_USART1_TX  9
 #define GPIOA_PA10_USART1_RX  10
 #define GPIOA_PA11_BEEPER  11
-#define GPIOA_PA12  12
+#define GPIOA_PA12  12                   /*71 ????*/
 #define GPIOA_PA13_SWDIO  13
 #define GPIOA_PA14_SWCLK  14
-#define GPIOA_PA15  15
+#define GPIOA_PA15  15                   /*unused*/
 
-#define GPIOB_PB00  0
-#define GPIOB_PB01  1 /*ADC12_IN9*/
-#define GPIOB_PB02  2
-#define GPIOB_PB03  3
-#define GPIOB_PB04  4
+#define GPIOB_PB00_ICBUMPER_LEFT  0      /*ADC12_IN8, 4 phototransistors in parallel*/
+#define GPIOB_PB01  1                    /*36 ????*/ /*ADC12_IN9, not used*/
+#define GPIOB_PB02  2                    /*37 ????*/
+#define GPIOB_PB03  3                    /*89 ????*/
+#define GPIOB_PB04  4                    /*90 unused*/
 #define GPIOB_PB05_CONTACT_BUMPER_L  5
-#define GPIOB_PB06  6
+#define GPIOB_PB06  6                    /*92 unused*/
 #define GPIOB_PB07_MOT_L_PHASE  7
-#define GPIOB_PB08  8
-#define GPIOB_PB09  9
+#define GPIOB_PB08  8                    /*95 unused*/
+#define GPIOB_PB09  9                    /*96 unused*/
 #define GPIOB_PB10_GROUND_SENSORS_TX  10
 #define GPIOB_PB11_IC_FRONTRIGHT  11
-#define GPIOB_PB12  12
+#define GPIOB_PB12  12                   /*33 ????*/
 #define GPIOB_PB13_SPI2_SCK  13
-#define GPIOB_PB14_TOURBINE_ENABLE  14
-#define GPIOB_PB15  15
+#define GPIOB_PB14_TOURBINE_ENABLE  14     /*TIM1_CH2N*/
+#define GPIOB_PB15  15                   /*36 ????*/
 
 
-#define GPIOC_PC00  0                         /*ADC12_IN10*/
-#define GPIOC_PC01_GROUND_SENSOR_LEFT  1      /*ADC12_IN11*/
+#define GPIOC_PC00_GROUND_SENSOR_LEFT  0      /*ADC12_IN10*/
+#define GPIOC_PC01_ICBUMPER_LEFT_WALL  1      /*ADC12_IN11*/
 #define GPIOC_PC02_GROUND_SENSOR_FRONTLEFT  2 /*ADC12_IN12*/
-#define GPIOC_PC03  3                         /*ADC12_IN13*/
+#define GPIOC_PC03_ICBUMPER_RIGHT  3          /*ADC12_IN13, 4 phototransistors in parallel*/
 #define GPIOC_PC04_GROUND_SENSOR_FRONTRIGHT  4 /*ADC12_IN14*/
-#define GPIOC_PC05  5                         /*ADC12_IN15*/
-#define GPIOC_PC06_MOT_R_ENABLE  6 /*TIM3_CH1*/
-#define GPIOC_PC07  7 /*должна быть боковая щётка но нет*/
-#define GPIOC_PC08_MOT_L_ENABLE  8 /*TIM3_CH3*/
-#define GPIOC_PC09_MAIN_BRUSH_ENABLE  9 /*TIM3_CH4*/
-#define GPIOC_PC10  10
-#define GPIOC_PC11  11
-#define GPIOC_PC12  12
-#define GPIOC_PC13  13
-#define GPIOC_PC14  14
-#define GPIOC_PC15  15
+#define GPIOC_PC05  5                         /*34 ????*/ /*ADC12_IN15, not used*/
+#define GPIOC_PC06_MOT_R_ENABLE  6            /*TIM3_CH1*/
+#define GPIOC_PC07  7                         /*64 ????*/ /*должна быть боковая щётка но нет*/
+#define GPIOC_PC08_MOT_L_ENABLE  8            /*TIM3_CH3*/
+#define GPIOC_PC09_MAIN_BRUSH_ENABLE  9       /*TIM3_CH4*/
+#define GPIOC_PC10  10                        /*51 ????*/
+#define GPIOC_PC11  11                        /*52 ????*/
+#define GPIOC_PC12  12                        /*53 ????*/
+#define GPIOC_PC13  13                        /*7 unused*/
+#define GPIOC_PC14  14                        /*8 ????*/
+#define GPIOC_PC15  15                        /*9 ????*/
 
 
-#define GPIOD_PD00  0
-#define GPIOD_PD01  1
+#define GPIOD_PD00  0                         /*81 ????*/
+#define GPIOD_PD01  1                         /*82 unused*/
 #define GPIOD_PD02_ENC_CASTER_WHEEL  2
 #define GPIOD_PD03_ENC_L  3
 #define GPIOD_PD04_IC_REAR  4
-#define GPIOD_PD05  5
-#define GPIOD_PD06  6
-#define GPIOD_PD07  7
-#define GPIOD_PD08  8
-#define GPIOD_PD09  9
+#define GPIOD_PD05  5                         /*86 unused*/
+#define GPIOD_PD06  6                         /*87 unused*/
+#define GPIOD_PD07  7                         /*88 unused*/
+#define GPIOD_PD08  8                         /*55 ????*/
+#define GPIOD_PD09  9                         /*56 unused*/
 #define GPIOD_PD10_MOT_R_GROUND  10
 #define GPIOD_PD11_TOUCH_BUTTON_COLOR_1  11
-#define GPIOD_PD12  12
+#define GPIOD_PD12  12                        /*59 ????*/
 #define GPIOD_PD13_IC_LEFT  13
-#define GPIOD_PD14  14
-#define GPIOD_PD15  15
+#define GPIOD_PD14  14                        /*61 ????*/
+#define GPIOD_PD15  15                        /*62 unused*/
 
 #define GPIOE_PE00_BUG_LEFT_MAGNET  0
-#define GPIOE_PE01  1
-#define GPIOE_PE02  2
+#define GPIOE_PE01  1                         /*98 unused*/
+#define GPIOE_PE02  2                         /*01 unused*/
 #define GPIOE_PE03_MOT_L_GROUND  3
 #define GPIOE_PE04_BUG_RIGHT_MAGNET  4
 #define GPIOE_PE05_SLEEP  5
 #define GPIOE_PE06_IC_RIGHT  6
-#define GPIOE_PE07  7
+#define GPIOE_PE07  7                         /*38 unused*/
 #define GPIOE_PE08_ENC_R  8
-#define GPIOE_PE09  9
+#define GPIOE_PE09  9                         /*40 unused*/
 #define GPIOE_PE10_IC_FRONTLEFT  10
 #define GPIOE_PE11_TOUCH_BUTTON_COLOR_2  11
 #define GPIOE_PE12_CONTACT_BUMPER_R  12
 #define GPIOE_PE13_MOT_R_PHASE  13
-#define GPIOE_PE14  14
-#define GPIOE_PE15  15
+#define GPIOE_PE14  14                        /*45 ????*/
+#define GPIOE_PE15  15                        /*46 unused*/
 
 /*
  * I/O ports initial setup, this configuration is established soon after reset

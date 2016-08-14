@@ -102,25 +102,7 @@ static PWMConfig pwm_bldc_cfg = {
   0
 };
 
-/*
- * Blinker thread.
- */
-static THD_WORKING_AREA(waThread1, 128);
-static THD_FUNCTION(Thread1, arg) {
 
-  (void)arg;
-
-  chRegSetThreadName("blinker");
-  while (true) {
-    //~ palSetPad(GPIOC, GPIOC_LED);
-    chThdSleepMilliseconds(500);
-    //~ palClearPad(GPIOC, GPIOC_LED);
-    chThdSleepMilliseconds(500);
-    //~ chprintf(&SD1, "ilife!\r\n");
-    //~ chprintf(&SD1, "PORT=%d PAD=%d\r\n",FPORT,FPAD);
-    //~ sd_flush(&SD1);
-  }
-}
 
 void sd_flush(SerialDriver *sdp){
       while(1){
@@ -135,9 +117,9 @@ void sd_flush(SerialDriver *sdp){
 int port_state[5]={0,0,0,0,0};
 GPIO_TypeDef *GPIOS[5]={GPIOA,GPIOB,GPIOC,GPIOD,GPIOE};
 int mask[5]={
-            1<<GPIOA_PA09_USART1_TX | 1<<GPIOA_PA10_USART1_RX | 1<<GPIOA_PA00_TOUCH_BUTTON | 1<<GPIOA_PA13_SWDIO | 1<<GPIOA_PA14_SWCLK | 1<<GPIOA_PA08_SIDE_BRUSH_ENABLE | 1<<GPIOA_PA11_BEEPER | 1<<GPIOA_PA03_GROUND_SENSOR_RIGHT,
-            1<<GPIOB_PB07_MOT_L_PHASE | 1<<GPIOB_PB13_SPI2_SCK | 1<<GPIOB_PB05_CONTACT_BUMPER_L | 1<<GPIOB_PB11_IC_FRONTRIGHT | 1<<GPIOB_PB14_TOURBINE_ENABLE | 1<<GPIOB_PB10_GROUND_SENSORS_TX,
-            1<<GPIOC_PC06_MOT_R_ENABLE | 1<<GPIOC_PC08_MOT_L_ENABLE | 1<<GPIOC_PC09_MAIN_BRUSH_ENABLE | 1<<GPIOC_PC02_GROUND_SENSOR_FRONTLEFT | 1<<GPIOC_PC04_GROUND_SENSOR_FRONTRIGHT | 1<<GPIOC_PC01_GROUND_SENSOR_LEFT,
+            1<<GPIOA_PA09_USART1_TX | 1<<GPIOA_PA10_USART1_RX | 1<<GPIOA_PA00_TOUCH_BUTTON | 1<<GPIOA_PA13_SWDIO | 1<<GPIOA_PA14_SWCLK | 1<<GPIOA_PA08_SIDE_BRUSH_ENABLE | 1<<GPIOA_PA11_BEEPER | 1<<GPIOA_PA03_GROUND_SENSOR_RIGHT | 1<<GPIOA_PA05_ICBUMPER_CENTER | 1<<GPIOA_PA01_CHARGER_VOLTAGE | 1<<GPIOA_PA02_BATT_VOLTAGE | 1<<GPIOA_PA04_TOURBINE_CURRENT | 1<<GPIOA_PA06_BRUSH_CURRENT | 1<<GPIOA_PA07_BATT_CURRENT,
+            1<<GPIOB_PB07_MOT_L_PHASE | 1<<GPIOB_PB13_SPI2_SCK | 1<<GPIOB_PB05_CONTACT_BUMPER_L | 1<<GPIOB_PB11_IC_FRONTRIGHT | 1<<GPIOB_PB14_TOURBINE_ENABLE | 1<<GPIOB_PB10_GROUND_SENSORS_TX | 1<<GPIOB_PB00_ICBUMPER_LEFT | 1<<GPIOB_PB01,
+            1<<GPIOC_PC06_MOT_R_ENABLE | 1<<GPIOC_PC08_MOT_L_ENABLE | 1<<GPIOC_PC09_MAIN_BRUSH_ENABLE | 1<<GPIOC_PC02_GROUND_SENSOR_FRONTLEFT | 1<<GPIOC_PC04_GROUND_SENSOR_FRONTRIGHT | 1<<GPIOC_PC00_GROUND_SENSOR_LEFT | 1<<GPIOC_PC03_ICBUMPER_RIGHT  |1<<GPIOC_PC05 | 1<<GPIOC_PC01_ICBUMPER_LEFT_WALL,
             1<<GPIOD_PD03_ENC_L | 1<<GPIOD_PD10_MOT_R_GROUND | 1<<GPIOD_PD04_IC_REAR | 1<<GPIOD_PD13_IC_LEFT | 1<<GPIOD_PD11_TOUCH_BUTTON_COLOR_1 ,
             1<<GPIOE_PE05_SLEEP | 1<<GPIOE_PE13_MOT_R_PHASE | 1<<GPIOE_PE08_ENC_R | 1<<GPIOE_PE12_CONTACT_BUMPER_R | 1<<GPIOE_PE03_MOT_L_GROUND | 1<<GPIOE_PE06_IC_RIGHT | 1<<GPIOE_PE10_IC_FRONTLEFT | 1<<GPIOE_PE00_BUG_LEFT_MAGNET | 1<<GPIOE_PE04_BUG_RIGHT_MAGNET | 1<<GPIOE_PE11_TOUCH_BUTTON_COLOR_2
             };
@@ -173,9 +155,9 @@ void test_pad(){
       sd_flush(&SD1);
 
       palSetPadMode(GPIOS[i], j, PAL_MODE_OUTPUT_PUSHPULL);
-      for(k=0;k<10;k++){
+      for(k=0;k<1;k++){
         palSetPad(GPIOS[i], j);
-        chThdSleepMilliseconds(10);
+        chThdSleepMilliseconds(1000);
         palClearPad(GPIOS[i], j);
         chThdSleepMilliseconds(10);
       }
@@ -216,9 +198,47 @@ void compare_pads(){
 }
 
 /*
+ * Blinker thread.
+ */
+static THD_WORKING_AREA(waThread1, 256);
+static THD_FUNCTION(Thread1, arg) {
+
+  (void)arg;
+
+  chRegSetThreadName("blinker");
+  while (true) {
+    //~ palSetPad(GPIOC, GPIOC_LED);
+    //~ chThdSleepMilliseconds(500);
+    //~ palClearPad(GPIOC, GPIOC_LED);
+    //~ chThdSleepMilliseconds(500);
+    //~ chprintf(&SD1, "ilife!\r\n");
+    //~ chprintf(&SD1, "PORT=%d PAD=%d\r\n",FPORT,FPAD);
+    //~ sd_flush(&SD1);
+
+    int i;
+    palClearPad(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX);
+    chThdSleepMilliseconds(1);
+    palSetPad(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX);
+
+    adcStartConversion(&ADCD1,
+                       &bldc_adc1_grp_for_tim1,
+                       adc1_samples_buf,
+                       1);
+    for(i=0;i<16;i++){
+      if (i==10 || i==11 || i==12 || i==14 || i==1 || i==2 || i==3 || i==13 || i==5 || i==8 || i==0 || i==6) continue;
+      chprintf(&SD1, "%02d=%04d ",i,adc1_samples_buf[i]);
+    }
+    chprintf(&SD1, "\r\n");
+    chThdSleepMilliseconds(500);
+
+  }
+}
+
+/*
  * Application entry point.
  */
 int main(void) {
+  int motor_en=0,brush_en=0;
   /*
    * System initializations.
    * - HAL initialization, this also initializes the configured device drivers
@@ -243,14 +263,10 @@ int main(void) {
   //~ palSetPadMode(GPIOA, GPIOA_PA10_USART1_RX, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
   chprintf(&SD1, "hello ilife!\r\n");
 
-  /*
-   * Creates the example thread.
-   */
-  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
 
 
-  //~ palSetPadMode(GPIOE, GPIOE_PE05_SLEEP, PAL_MODE_OUTPUT_PUSHPULL);//SLEEP OK
-  palSetPad(GPIOE, GPIOE_PE05_SLEEP);//wakeup
+  palSetPadMode(GPIOE, GPIOE_PE05_SLEEP, PAL_MODE_OUTPUT_PUSHPULL);//SLEEP OK
+  //~ palSetPad(GPIOE, GPIOE_PE05_SLEEP);//wakeup
   chThdSleepMilliseconds(1);//wait DRV8801
 
 
@@ -277,13 +293,15 @@ int main(void) {
 
   pwmStart(&PWMD3, &pwm_bldc_cfg);
 
-  pwmEnableChannel(&PWMD3, 0,3500/4);//tim3-ch1
-  pwmEnableChannel(&PWMD3, 2,3500/4);//tim3-ch3
-
   adcStart(&ADCD1, NULL);
 
   palSetPadMode(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX, PAL_MODE_OUTPUT_PUSHPULL);
   //~ palClearPad(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX);
+
+  /*
+   * Creates the example thread.
+   */
+  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
 
 
   /*
@@ -293,23 +311,42 @@ int main(void) {
    */
   while (true) {
     //~ compare_pads();
-    palTogglePort(GPIOB, 1<<GPIOB_PB10_GROUND_SENSORS_TX);
-    int i;
-    palClearPad(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX);
-    chThdSleepMilliseconds(1);
-    palSetPad(GPIOB, GPIOB_PB10_GROUND_SENSORS_TX);
-    adcStartConversion(&ADCD1,
-                       &bldc_adc1_grp_for_tim1,
-                       adc1_samples_buf,
-                       1);
-    for(i=0;i<16;i++){
-      chprintf(&SD1, "%02d=%04d ",i,adc1_samples_buf[i]);
-    }
-    chprintf(&SD1, "\r\n");
-    chThdSleepMilliseconds(500);
-    //~ if (sdGetTimeout(&SD1,MS2ST(100))>0){
+    //~ palTogglePort(GPIOB, 1<<GPIOB_PB10_GROUND_SENSORS_TX);
+    char c=0;
+    c=sdGetTimeout(&SD1,MS2ST(100));
+    if (c=='s'){
       //~ test_pad();
-    //~ }//else{
+      palSetPadMode(GPIOC, GPIOC_PC07, PAL_MODE_OUTPUT_PUSHPULL);
+      palSetPad(GPIOC, GPIOC_PC07);
+      chThdSleepMilliseconds(1000);
+      palClearPad(GPIOC, GPIOC_PC07);
+      palSetPadMode(GPIOC, GPIOC_PC07, PAL_MODE_INPUT);
+    }else if(c=='p'){
+      palTogglePad(GPIOE, GPIOE_PE05_SLEEP);
+      chprintf(&SD1,"sleep=%d\r\n",palReadPad(GPIOE, GPIOE_PE05_SLEEP));
+    }else if(c=='m'){
+      if(motor_en == 0){
+        pwmEnableChannel(&PWMD3, 0, 3500/2);//tim3-ch1
+        pwmEnableChannel(&PWMD3, 2, 3500/2);//tim3-ch3
+        motor_en=1;
+      }else{
+        motor_en=0;
+        pwmDisableChannel(&PWMD3, 0);//tim3-ch1
+        pwmDisableChannel(&PWMD3, 2);//tim3-ch3
+      }
+    }else if(c=='b'){
+      if(brush_en == 0){
+        pwmEnableChannel(&PWMD3, 3, 3500/2);//tim3-ch1
+        brush_en=1;
+        palSetPadMode(GPIOB, GPIOB_PB14_TOURBINE_ENABLE, PAL_MODE_OUTPUT_PUSHPULL);//SLEEP OK
+        palSetPad(GPIOB, GPIOB_PB14_TOURBINE_ENABLE);
+      }else{
+        brush_en=0;
+        pwmDisableChannel(&PWMD3, 3);//tim3-ch1
+        palClearPad(GPIOB, GPIOB_PB14_TOURBINE_ENABLE);
+      }
+    }
+    //else{
       //~ chThdSleepMilliseconds(500);
     //~ }
   }
