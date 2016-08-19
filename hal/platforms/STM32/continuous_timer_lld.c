@@ -155,6 +155,7 @@ inline uint32_t continuous_timer_lld_get_nanos(){
   nanos = _TICKS_PER_ms_ - nanos;//down counter
   nanos *= (uint32_t)( (uint32_t)(_SECONDS_PER_TICK_*(1000000000ULL*1000ULL)) + 1UL);//round nanos 13889*72000 < ULONG_MAX
   nanos /=1000UL;//uint32_t round nanos,1000008 max
+  nanos -= (uint32_t)nanos/125000UL;//more accurate,1000000 max
 #endif
 	return nanos;//uint32_t 
 }
