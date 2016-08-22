@@ -20,6 +20,8 @@
 #include "test.h"
 #include "chprintf.h"
 
+#include "serial_protocol_modules.h"
+
 #define SERIAL (BaseSequentialStream *) &SD1
 
 int FPORT=-1,FPAD=-1;
@@ -318,6 +320,7 @@ int main(void) {
    * Creates the example thread.
    */
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
+  serial_protocol_init(&SD1);
 
 
   /*
@@ -328,7 +331,9 @@ int main(void) {
   while (true) {
     //~ compare_pads();
     //~ palTogglePort(GPIOB, 1<<GPIOB_PB10_GROUND_SENSORS_TX);
+    /*
     char c=0;
+    
     c=sdGetTimeout(&SD1,MS2ST(100));
     if (c=='s'){
       //~ test_pad();
@@ -362,8 +367,9 @@ int main(void) {
         palClearPad(GPIOB, GPIOB_PB14_TOURBINE_ENABLE);
       }
     }
+    */
     //else{
-      //~ chThdSleepMilliseconds(500);
+      chThdSleepMilliseconds(500);
     //~ }
   }
 }
