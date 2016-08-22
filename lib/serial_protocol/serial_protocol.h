@@ -1,12 +1,11 @@
 #ifndef _SERIAL_PROTOCOL_H_
 #define _SERIAL_PROTOCOL_H_
 
-#include "ch.h"
-#include "hal.h"
+#include <stdint.h>
+
+#include "serial_protocol_config.h"
 
 typedef void (*SD_CALLBACK)(void *arg);
-
-//~ typedef enum SerialPacketType_t SerialPacketType_t;
 
 typedef struct SerialProtocolCmd_t SerialProtocolCmd_t;
 
@@ -30,7 +29,12 @@ extern uint16_t SD_CMDS_COUNT;
 extern "C" {
 #endif
 
-void serial_protocol_init(SerialDriver *sdp);
+#if defined(_SERIAL_PROTOCOL_CHIBIOS_RT_)
+void serial_protocol_thread_init(void);
+#endif
+
+void serial_protocol_main_loop_iterate(void);
+void serial_protocol_get_cmd(uint8_t cmd);
 
 #ifdef __cplusplus
 }

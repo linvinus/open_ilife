@@ -319,8 +319,9 @@ int main(void) {
   /*
    * Creates the example thread.
    */
-  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
-  serial_protocol_init(&SD1);
+  //chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
+
+  serial_protocol_thread_init();
 
 
   /*
@@ -333,7 +334,7 @@ int main(void) {
     //~ palTogglePort(GPIOB, 1<<GPIOB_PB10_GROUND_SENSORS_TX);
     /*
     char c=0;
-    
+
     c=sdGetTimeout(&SD1,MS2ST(100));
     if (c=='s'){
       //~ test_pad();

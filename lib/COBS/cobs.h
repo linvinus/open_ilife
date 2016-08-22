@@ -1,6 +1,10 @@
 #ifndef _COBS_H_
 #define _COBS_H_
 
+#include <stdint.h>
+#include <stddef.h>
+
+
 /*
  * COBS_SYMBOL - any byte that will be epsend in encoded data
  *

@@ -166,6 +166,7 @@ inline uint32_t continuous_timer_lld_get_nanos(){
 //~ }
 
 void continuous_timer_lld_sleep_nanos(uint16_t sleepnano){
+  (void) sleepnano;
 #if STM32_CONTINUOUS_TIMER_USE_CONTINUOUS_TIMER7
 
   if(sleepnano>(36000-2)) return; //error!

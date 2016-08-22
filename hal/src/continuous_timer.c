@@ -129,7 +129,7 @@ inline uint32_t continuous_timer_get_millis(){
 /* overflow will occur every
  * 4294967295/1000 - (1000008/1000) =  4293967ms (~71min)
  * */
-inline uint32_t continuous_timer_get_micros32I(){
+inline uint32_t continuous_timer_get_micros32I(void){
   uint32_t n;
   uint32_t m;
  	m = continuous_timer_get_millis(); //uint32_t
@@ -139,7 +139,7 @@ inline uint32_t continuous_timer_get_micros32I(){
   return m;
 }
 
-inline uint64_t continuous_timer_get_micros64I(){
+inline uint64_t continuous_timer_get_micros64I(void){
   uint32_t n;
   uint64_t m;
  	m = continuous_timer_get_millis(); //uint32_t

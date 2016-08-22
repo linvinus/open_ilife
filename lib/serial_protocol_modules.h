@@ -2,6 +2,7 @@
 #ifndef _SERIAL_PROTOCOL_MODULES_H_
 #define _SERIAL_PROTOCOL_MODULES_H_
 
+
 #include "serial_protocol.h"
 
 typedef struct {
