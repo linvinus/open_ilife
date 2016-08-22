@@ -30,4 +30,5 @@
 
 *~
 .dep
+.d
 build
