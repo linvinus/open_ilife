@@ -25,4 +25,24 @@
 #define sd_sysunlock()
 #define sd_wait_for_chars(s)
 
+#define sd_protocol_inform(sequence,cmd,state) \
+char *c; \
+switch(state){ \
+  case   SP_OK: \
+    c="SP_OK"; \
+  break; \
+  case SP_UNCKNOWNCMD:\
+    c="SP_UNCKNOWNCMD"; \
+  break; \
+  case SP_WRONGCHECKSUMM: \
+    c="SP_WRONGCHECKSUMM"; \
+  case SP_WRONGSIZE: \
+    c="SP_WRONGSIZE"; \
+  break; \
+  default: \
+    c="Uncknown state!"; \
+} \
+ \
+printf("\r\ngot inform cmd(%d)[%d]=%d %s\r\n",(uint8_t)cmd,(uint8_t)sequence,(uint8_t)state,c)
+
 #endif

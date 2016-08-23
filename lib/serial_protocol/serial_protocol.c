@@ -22,21 +22,28 @@ typedef struct{
 }sd_header_t;
 
 typedef enum {
-  SP_OK,
-  SP_UNCKNOWNCMD,
-  SP_WRONGCHECKSUMM,
-  SP_WRONGSIZE
-}SerialPacketSystemMessage_t;
-
-typedef enum {
   SP_SYSTEM_MESSAGE = 0,
   SP_CONFIGURATION = 1
 }SerialPacketType_t;
 
+/*
+ * Because packet whole encoded as header + body,
+ * but we parse separately firstly head then body,
+ * we need store cobs-decoder state between calls
+ * */
+
+typedef struct{
+  int32_t n;    //current processed byte
+  int32_t code; //last code
+} cobs_state_t;
+
+static cobs_state_t cobs_state_rx; //store state between calls of cobs_receive_decode
+
+#define cobs_rx_reset() {cobs_state_rx.n = 0;}
 
 static int16_t build_and_send_package(sd_header_t *hdr,size_t bodysize,uint8_t* body){
   uint16_t pktsize=0,i;
-  uint8_t *raw = cobs_buf_p + COBSBUF_RAW_DATA_OFFCET;
+  uint8_t *raw = cobs_buf_p + COBSBUF_RAW_DATA_OFFCET;//after cobs_encode data will be starting from [0]
   uint8_t *hdrp=(uint8_t *)hdr;
 
   raw[0]=hdrp[0];//sequence
@@ -75,50 +82,66 @@ static int16_t build_and_send_package(sd_header_t *hdr,size_t bodysize,uint8_t* 
 }//build_and_send_package
 
 static size_t cobs_receive_decode(size_t pktsize, uint8_t* destination,uint8_t invchksumm){
-  int32_t code,i,n;
-  uint8_t* dst = destination;
-  uint8_t* end = destination + pktsize;
+
+  uint8_t *dst = destination;
+  uint8_t *end = dst + pktsize;
   uint8_t chksumm = 0;
-  size_t read_index  = 0;
+  int32_t c;
 
-  while(read_index < pktsize)
+
+  while(dst < end)
   {
-      code = sd_get_timeout(100);//read_index
-      //~ code2 = code - 1;
+      if(cobs_state_rx.n < 2){ //load new code only if previous was fully parsed (cobs_state_rx.n==1 || cobs_state_rx.n==0)
 
-      if(code < 0 || code == COBS_SYMBOL || ( (read_index + code) > end && code != 1))
-      {
-          return 0;
-      }
-      //~ read_index++;
+        cobs_state_rx.code = sd_get_timeout(100);
 
-      n=code;
-      for(i=0; i < n; i++){
-        code = sd_get_timeout(100);//read_index
-        if(code < 0 || code==COBS_SYMBOL) return 0;//error
-        *(dst++) = code;
-        chksumm += code;
-        read_index++;
+        if(cobs_state_rx.code < 0 || cobs_state_rx.code == COBS_SYMBOL /*|| ( (cobs_state_rx.read_index + cobs_state_rx.code) > end && cobs_state_rx.code != 1)*/)
+            return 0;//error
+
+        cobs_state_rx.n = cobs_state_rx.code;
       }
 
+      while( cobs_state_rx.n > 1 ){
+        if(dst < end){
 
-      if(code != 0xFF && /*dst != end*/ read_index != pktsize)
+          c = sd_get_timeout(100);
+
+          if(c < 0 || c == COBS_SYMBOL)//COBS_SYMBOL is not allowed there!
+            return 0;//error
+
+          cobs_state_rx.n--;
+          chksumm += *(dst++) = c;
+        }else
+          goto FINISH;//package was partially received, got requested pktsize
+      }
+
+
+      if(cobs_state_rx.code != 0xFF && dst != end)
       {
-          *(dst++) = COBS_SYMBOL;
-          chksumm += COBS_SYMBOL;
+          chksumm += *(dst++) = COBS_SYMBOL;
+          cobs_state_rx.n--;
       }
   }
+  FINISH:
+
   //warning: comparison of promoted ~unsigned with unsigned https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38341
-  if( invchksumm !=0 && ((uint8_t)~chksumm) != invchksumm) return 0;//error
+  if( invchksumm !=0 && ((uint8_t)~chksumm) != invchksumm)
+    return 0;//error, broken package, checksum mismatch
 
   return (dst - destination);
 }//cobs_receive_decode
 
+static inline size_t cobs_start_receiving_and_decode(size_t pktsize, uint8_t* destination){
+  cobs_rx_reset();
+  return cobs_receive_decode(pktsize, destination,0);
+}
+
+
 static inline void skip(sd_header_t *hdr){
   //skip current packet body
   uint8_t s = hdr->size;
-  while( s-- > 0 )
-    sd_get_timeout(100);
+  while( s-- > 0 && sd_get_timeout(100) >=0)
+    ;
 }
 
 static inline void answer(sd_header_t *hdr, SerialPacketSystemMessage_t reason){
@@ -134,11 +157,27 @@ static inline void skip_and_aswer(sd_header_t *hdr, SerialPacketSystemMessage_t 
   answer(hdr,err);
 }
 
+static uint8_t calculate_version_checksumm(void){
+    uint8_t verchksumm,i;
+    verchksumm = SD_MAX_PACKET ^ SD_CMDS_COUNT;
+    for(i=0;i<SD_CMDS_COUNT;i++){
+      verchksumm ^= (SD_CMDS[i].rx_data_size
+                 ^   SD_CMDS[i].tx_data_size
+                 ^ ( (SD_CMDS[i].rx_data == NULL)<<1
+                   | (SD_CMDS[i].rx_callback == NULL)<<2
+                   | (SD_CMDS[i].rx_arg == NULL)<<3
+                   | (SD_CMDS[i].tx_data == NULL)<<4
+                   | (SD_CMDS[i].tx_callback == NULL)<<5
+                   | (SD_CMDS[i].tx_arg == NULL)<<6 ) );
+    }
+    return verchksumm;
+}
+
 static inline void _sd_main_loop_iterate(void){
     int32_t c = -1;
     c = sd_get_timeout(100);
 
-    //~ if(c >=0) sd_put_timeout(c,100);
+    //~ if(c >=0) sd_put_timeout(c,100);//loopback
 
     if(c == COBS_SYMBOL){
       /* got packet delimeter,
@@ -147,59 +186,69 @@ static inline void _sd_main_loop_iterate(void){
       uint8_t header[SD_HEADER_SIZE]={0};
       sd_header_t *hdr = (sd_header_t *)header;
 
-      sd_wait_for_chars(3);
+      sd_wait_for_chars(3);//wait for count of SD_HEADER_SIZE
 
-      if( cobs_receive_decode(SD_HEADER_SIZE,header,0) == SD_HEADER_SIZE ){
-        last_sequence = hdr->sequence;
+      if( cobs_start_receiving_and_decode(SD_HEADER_SIZE,header) == SD_HEADER_SIZE ){
         //got header
-        if(hdr->size < SD_MAX_PACKET ){
-          //hdr->cmd == SP_SYSTEM_MESSAGE
-          if( (hdr->cmd & ~0x80) < SD_CMDS_COUNT ){//known CMD
+        if(hdr->cmd == (SP_SYSTEM_MESSAGE & 0x80)){//get version
+          //cmd contain protocol checksumm
+          hdr->cmd = calculate_version_checksumm();
+          answer(hdr,SP_VERSION);
+        }else if(hdr->cmd == SP_SYSTEM_MESSAGE){//received protocol information
+            sd_broadcast_system_message(hdr->sequence,hdr->size,hdr->invchksumm);
+            sd_protocol_inform(hdr->sequence,hdr->size,hdr->invchksumm);
+        }else{
+          last_sequence = hdr->sequence;
 
-            if(hdr->cmd & 0x80){
-              //get CMD
-              hdr->cmd &= ~0x80;//remove GET bit
+          if(hdr->size < SD_MAX_PACKET ){
+            //hdr->cmd == SP_SYSTEM_MESSAGE
+            if( (hdr->cmd & ~0x80) < SD_CMDS_COUNT ){//known CMD
 
-              build_and_send_package(hdr,SD_CMDS[hdr->cmd].tx_data_size,SD_CMDS[hdr->cmd].tx_data);
+              if(hdr->cmd & 0x80){
+                //get CMD
+                hdr->cmd &= ~0x80;//remove GET bit
 
-            }else{//set CMD
-              if( SD_CMDS[hdr->cmd].rx_data_size == hdr->size ){
+                build_and_send_package(hdr,SD_CMDS[hdr->cmd].tx_data_size,SD_CMDS[hdr->cmd].tx_data);
 
-                //receive body in temporary buffer
-                if( cobs_receive_decode(hdr->size, cobs_buf_p, hdr->invchksumm) == hdr->size){
+              }else{//set CMD
+                if( SD_CMDS[hdr->cmd].rx_data_size == hdr->size ){
 
-                  //got body
-                  uint8_t* rx_data = SD_CMDS[hdr->cmd].rx_data;
+                  //receive body in temporary buffer
+                  if( cobs_receive_decode(hdr->size, cobs_buf_p, hdr->invchksumm) == hdr->size){
 
-                  //copy body to destination
-                  sd_syslock();
-                  uint16_t i;
-                  for(i=0; i < hdr->size; i++){
-                    rx_data[i]=cobs_buf_p[i];
-                  }
-                  sd_sysunlock();
+                    //got body
+                    uint8_t* rx_data = SD_CMDS[hdr->cmd].rx_data;
 
-                  //callback
-                  if(SD_CMDS[hdr->cmd].rx_callback != NULL){
-                    SD_CMDS[hdr->cmd].rx_callback(SD_CMDS[hdr->cmd].rx_arg);
-                  }
+                    //copy body to destination
+                    sd_syslock();
+                    uint16_t i;
+                    for(i=0; i < hdr->size; i++){
+                      rx_data[i]=cobs_buf_p[i];
+                    }
+                    sd_sysunlock();
 
-                  if(hdr->sequence & 0x80){ //comfirm requested
-                    //send ak
-                    answer(hdr,SP_OK);
-                  }
-                }else //body error
-                  answer(hdr,SP_WRONGCHECKSUMM); //don't skip because already partially or completely received
+                    //callback
+                    if(SD_CMDS[hdr->cmd].rx_callback != NULL){
+                      SD_CMDS[hdr->cmd].rx_callback(SD_CMDS[hdr->cmd].rx_arg);
+                    }
 
-              }else
-                skip_and_aswer(hdr,SP_WRONGSIZE);
+                    if(hdr->sequence & 0x80){ //comfirm requested
+                      //send ak
+                      answer(hdr,SP_OK);
+                    }
+                  }else //body error
+                    answer(hdr,SP_WRONGCHECKSUMM); //don't skip because already partially or completely received
 
-            }//CMD set
+                }else
+                  skip_and_aswer(hdr,SP_WRONGSIZE);
+
+              }//CMD set
+            }else
+              skip_and_aswer(hdr,SP_UNCKNOWNCMD);
+
           }else
-            skip_and_aswer(hdr,SP_UNCKNOWNCMD);
-
-        }else
-          skip_and_aswer(hdr,SP_WRONGSIZE);
+            skip_and_aswer(hdr,SP_WRONGSIZE);
+        }//nonsystem message
 
       }//if got header
 
@@ -219,6 +268,7 @@ static THD_FUNCTION(ThreadSerialProtocol, arg) {
 
 
 void serial_protocol_thread_init(void){
+  chThdQueueObjectInit(&sd_protocol_q_waiting);
   chThdCreateStatic(waThreadSerialProtocol, sizeof(waThreadSerialProtocol), NORMALPRIO+1, ThreadSerialProtocol, NULL);
 }
 #endif /*_SERIAL_PROTOCOL_CHIBIOS_RT_*/
@@ -227,12 +277,34 @@ void serial_protocol_main_loop_iterate(void){
   _sd_main_loop_iterate();
 }
 
-void serial_protocol_get_cmd(uint8_t cmd){
-  sd_header_t hdr1;
-  sd_header_t  *hdr = &hdr1;
-  hdr->sequence = (++last_sequence) & ~0x80;                        //remove confirm bit
-  hdr->cmd = 1 | 0x80;//GET
-  hdr->size = SD_CMDS[cmd].tx_data_size;                          //store current cmd in size
-  hdr->invchksumm = 0;
-  build_and_send_package(hdr, 0, NULL);
+int serial_protocol_get_cmd(uint8_t cmd){
+  if(cmd < SD_CMDS_COUNT )
+  {
+    sd_header_t hdr1;
+    sd_header_t  *hdr = &hdr1;
+    hdr->sequence = (++last_sequence) & ~0x80; //remove confirm bit, the answer is our confirm
+    hdr->cmd = cmd | 0x80;//GET
+    hdr->size = SD_CMDS[cmd].tx_data_size;
+    hdr->invchksumm = 0;
+    build_and_send_package(hdr, 0, NULL);
+    return 0;//OK
+  }else
+    return -1;//ERROR
+}
+
+int serial_protocol_set_cmd(uint8_t cmd, uint8_t confirm){
+  if(cmd < SD_CMDS_COUNT )
+  {
+    sd_header_t hdr1;
+    sd_header_t  *hdr = &hdr1;
+    hdr->sequence = (++last_sequence);
+    hdr->sequence |= (confirm ?  0x80 : 0);
+    hdr->cmd = cmd & ~0x80;//SET
+    build_and_send_package(hdr,SD_CMDS[hdr->cmd].tx_data_size,SD_CMDS[hdr->cmd].tx_data);
+    if(confirm){
+      return sd_wait_system_message(hdr->sequence,hdr->cmd);//-2 - timeout, 0 - successful
+    }
+    return 0;//OK
+  }else
+    return -1;//ERROR
 }

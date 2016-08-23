@@ -33,5 +33,26 @@
       } \
       chSysUnlock();\
 
+#define sd_protocol_inform(sequence,cmd,state)
 
+static threads_queue_t       sd_protocol_q_waiting;
+
+static inline int16_t sd_wait_system_message(uint8_t sequence, uint8_t cmd){
+  uint32_t start = chTimeNow();
+  uint32_t elapsed = 0;
+  do{
+    msg_t msg = chThdEnqueueTimeoutS(&sd_protocol_q_waiting,MS2ST(500) - elapsed);
+    if(msg == MSG_TIMEOUT){
+      return -2;//timeout
+    }else if( (msg >> 16 & 0x7F) == (sequence & ~0x80) &&
+              (msg >> 8 & 0x7F) == (cmd & ~0x80) ){
+          return 0;//Delivered successful
+    }
+  }while( (elapsed = chTimeElapsedSince(start)) < MS2ST(500) );
+  return -2;//timeout anyway
+}
+
+static inline void sd_broadcast_system_message(uint8_t sequence, uint8_t cmd,uint8_t state){
+  chThdDequeueAllI(&sd_protocol_q_waiting,((uint32_t)sequence<<16|(uint32_t)cmd<<8|state));
+}
 #endif

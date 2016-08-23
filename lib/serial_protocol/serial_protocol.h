@@ -24,6 +24,14 @@ struct SerialProtocolCmd_t{
 extern SerialProtocolCmd_t SD_CMDS[];
 extern uint16_t SD_CMDS_COUNT;
 
+typedef enum {
+  SP_OK,
+  SP_UNCKNOWNCMD,
+  SP_WRONGCHECKSUMM,
+  SP_WRONGSIZE,
+  SP_VERSION
+}SerialPacketSystemMessage_t;
+
 #if !defined(_FROM_ASM_)
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +42,8 @@ void serial_protocol_thread_init(void);
 #endif
 
 void serial_protocol_main_loop_iterate(void);
-void serial_protocol_get_cmd(uint8_t cmd);
+int serial_protocol_get_cmd(uint8_t cmd);
+int serial_protocol_set_cmd(uint8_t cmd, uint8_t confirm);
 
 #ifdef __cplusplus
 }

@@ -16,7 +16,7 @@ int TTY_fd;
 #include <fcntl.h>
 #include <sys/select.h>
 #include <stdint.h>
-
+#include <pthread.h>
 
 int
 set_interface_attribs (int fd, int speed, int parity)
@@ -191,8 +191,18 @@ int inputAvailable()
   //~ return (FD_ISSET(STDIN_FILENO, &fds));
 }
 
+void serial_protocol_thread_fn(void){
+  while(1){
+    serial_protocol_main_loop_iterate();
+    //~ usleep (1 * 1000); timeout in sd_read_byte is enough
+  }
+}
+
 int main(void) {
 
+  pthread_t serial_protocol_thread;
+  int  iret1;
+  
   setbuf(stdout, NULL);// disable buffering entirely
 
   char *portname = "/dev/ttyUSB0";
@@ -218,15 +228,25 @@ int main(void) {
                                      // receive 25:  approx 100 uS per char transmit
   //char buf [100];
   //int n = read (fd, buf, sizeof buf);  // read up to 100 characters if ready to read
-  while(1){
-    printf("###\r\n");
-    //~ if(inputAvailable())
-      serial_protocol_get_cmd(1);
 
-    printf("###\r\n");
+  iret1 = pthread_create( &serial_protocol_thread, NULL, serial_protocol_thread_fn, (void*) NULL);
+  if(iret1){
+    fprintf(stderr,"Error - pthread_create() return code: %d\n",iret1);
+    exit(EXIT_FAILURE);
+  }
+  
+  while(1){
+    //~ printf("\r\n###");
+    //~ if(inputAvailable())
+      //~ serial_protocol_get_cmd(1);
+
+    //~ printf("###\r\n");
+    //~ usleep (500 * 1000);
+    printf("\r\n@@@");
+    serial_protocol_set_cmd(1,1);
+    printf("@@@\r\n");
     usleep (500 * 1000);
     //~ c = getch();
-    serial_protocol_main_loop_iterate();
   }
 
 }
