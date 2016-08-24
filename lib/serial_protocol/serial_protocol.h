@@ -5,7 +5,7 @@
 
 #include "serial_protocol_config.h"
 
-typedef void (*SD_CALLBACK)(void *arg);
+typedef void (*SD_CALLBACK)(uint16_t data_size,uint8_t *data,void *arg);
 
 typedef struct SerialProtocolCmd_t SerialProtocolCmd_t;
 
@@ -42,8 +42,9 @@ void serial_protocol_thread_init(void);
 #endif
 
 void serial_protocol_main_loop_iterate(void);
-int serial_protocol_get_cmd(uint8_t cmd);
-int serial_protocol_set_cmd(uint8_t cmd, uint8_t confirm);
+int serial_protocol_get_cmd_async(uint8_t cmd);
+int32_t serial_protocol_get_cmd_sync(uint8_t cmd);
+uint8_t calculate_version_checksumm(void);
 
 #ifdef __cplusplus
 }

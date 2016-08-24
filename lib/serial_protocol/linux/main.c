@@ -18,6 +18,10 @@ int TTY_fd;
 #include <stdint.h>
 #include <pthread.h>
 
+#define DEBUG_PROCOTOL(...) fprintf (stderr, __VA_ARGS__)
+//~ #define DEBUG_SERIAL(...) fprintf (stderr, __VA_ARGS__)
+#define DEBUG_SERIAL(...)
+
 int
 set_interface_attribs (int fd, int speed, int parity)
 {
@@ -102,18 +106,18 @@ int sd_read_byte(int time_ms){
   timeout.tv_usec = 1000*time_ms;
   rv = select(TTY_fd + 1, &set, NULL, NULL, &timeout);
   if(rv == -1){
-    perror("select error\r\n"); /* an error accured */
+    DEBUG_SERIAL("select error\r\n"); /* an error accured */
     return -1;
   }else if(rv == 0){
-    printf("sd_read_byte timeout \r\n"); /* a timeout occured */
+    DEBUG_SERIAL("sd_read_byte timeout \r\n"); /* a timeout occured */
     return -1;
   }else{
      /* there was data to read */
     if(read( TTY_fd, &byte, 1 ) >= 0){
-      printf("r=0x%02x ",byte);
+      DEBUG_SERIAL("r=0x%02x ",byte);
       return byte;
     }else{
-      printf("r=timeout ");
+      DEBUG_SERIAL("r=timeout ");
       return -1;
     }
   }
@@ -122,7 +126,7 @@ int sd_read_byte(int time_ms){
 int sd_write_byte(char b,int time_ms){
 
 
-  printf("*** 0x%02d ",(uint8_t)b);
+  DEBUG_SERIAL("*** w=0x%02d ",(uint8_t)b);
 
 
 
@@ -151,7 +155,7 @@ int sd_write_byte(char b,int time_ms){
 int sd_write(uint8_t *buff,int size,int time_ms){
   int i;
   for(i=0;i<size;i++){
-    printf("[%d]=0x%02x ",i,buff[i]);
+    DEBUG_SERIAL("w[%d]=0x%02x ",i,buff[i]);
   }
   //~ struct timeval timeout;
   //~ char buff[1];
@@ -197,12 +201,23 @@ void serial_protocol_thread_fn(void){
     //~ usleep (1 * 1000); timeout in sd_read_byte is enough
   }
 }
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_buffer = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_condattr_t condattr;
+pthread_cond_t condition = PTHREAD_COND_INITIALIZER;
+uint32_t sd_last_system_message = 0;
 
 int main(void) {
 
   pthread_t serial_protocol_thread;
+
+  pthread_condattr_init(&condattr);
+  pthread_condattr_setclock(&condattr, CLOCK_MONOTONIC);
+  pthread_cond_init(&condition, &condattr);
+
   int  iret1;
-  
+
   setbuf(stdout, NULL);// disable buffering entirely
 
   char *portname = "/dev/ttyUSB0";
@@ -220,6 +235,7 @@ int main(void) {
 
   set_interface_attribs (TTY_fd, B115200, 0);  // set speed to 115,200 bps, 8n1 (no parity)
   set_blocking (TTY_fd, 1);                // set no blocking
+  tcflush(TTY_fd, TCIOFLUSH);
 
   //~ setbuf(TTY_fd, NULL);// disable buffering entirely
   //write (TTY_fd, "hello!\n", 7);           // send 7 character greeting
@@ -234,7 +250,26 @@ int main(void) {
     fprintf(stderr,"Error - pthread_create() return code: %d\n",iret1);
     exit(EXIT_FAILURE);
   }
-  
+  int res=0;
+
+  //check version on first connect
+  int32_t remote_checksumm;
+  do{
+    remote_checksumm = serial_protocol_get_cmds_version();
+  }while(remote_checksumm < 0);
+
+  if( remote_checksumm >= 0){
+    int32_t local_checksumm = calculate_version_checksumm();
+    if( remote_checksumm == local_checksumm){
+      printf("Version OK\r\n");
+    }else{
+      printf("ERROR: Version missmatch! %d != %d\r\n",local_checksumm,remote_checksumm);
+      exit(1);
+    }
+  }
+
+  struct timespec   start,end;
+
   while(1){
     //~ printf("\r\n###");
     //~ if(inputAvailable())
@@ -243,8 +278,11 @@ int main(void) {
     //~ printf("###\r\n");
     //~ usleep (500 * 1000);
     printf("\r\n@@@");
-    serial_protocol_set_cmd(1,1);
-    printf("@@@\r\n");
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    int res = serial_protocol_set_cmd(1,1);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    printf("@@@ %d s=%d %dms \r\n",res,end.tv_sec - start.tv_sec, (end.tv_nsec - start.tv_nsec)/1000) ;
     usleep (500 * 1000);
     //~ c = getch();
   }
