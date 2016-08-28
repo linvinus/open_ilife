@@ -1,0 +1,3 @@
+[submodule "lib/serial_protocol"]
+	path = lib/serial_protocol
+	url = git://github.com/linvinus/linvinus_serial_protocol
