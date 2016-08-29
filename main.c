@@ -22,7 +22,7 @@
 
 #include "serial_protocol_modules.h"
 
-#define SERIAL (BaseSequentialStream *) &SD1
+BaseSequentialStream *serp = (BaseSequentialStream *) &SD1;
 
 int FPORT=-1,FPAD=-1;
 
@@ -136,9 +136,9 @@ void test_pad(void){
   FPAD=-1;
 
   palSetPadMode(GPIOB, GPIOB_PB13_SPI2_SCK, PAL_MODE_INPUT_PULLDOWN);//TEST PAD
-  chprintf(SERIAL, "PREPARE TEST\r\n");
+  chprintf(serp, "PREPARE TEST\r\n");
   //~ chThdSleepMilliseconds(10000);
-  chprintf(SERIAL, "TESTING...\r\n");
+  chprintf(serp, "TESTING...\r\n");
   for(i=0;i<5;i++){
     for(j=0;j<16;j++){
 
@@ -156,7 +156,7 @@ void test_pad(void){
       if(mask[i] & (1<<j)) continue;
 
       //~ if(GPIOS[i]==GPIOA && j== 10) continue;//beeper
-      chprintf(SERIAL, "[%d,%d]\r\n",i,j);
+      chprintf(serp, "[%d,%d]\r\n",i,j);
       sd_flush(&SD1);
 
       palSetPadMode(GPIOS[i], j, PAL_MODE_OUTPUT_PUSHPULL);
@@ -170,7 +170,7 @@ void test_pad(void){
       if( palReadPad(GPIOB, GPIOB_PB13_SPI2_SCK) > 0){
         FPORT=i;
         FPAD=j;
-        chprintf(SERIAL, "PIN=%c%d\r\n",'A'+FPORT,FPAD);
+        chprintf(serp, "PIN=%c%d\r\n",'A'+FPORT,FPAD);
         //~ goto done;
         //~ break;
        }
@@ -179,22 +179,22 @@ void test_pad(void){
       sdGet(&SD1);//wait for key
     }
   }
-  chprintf(SERIAL, "TEST DONE\r\n");
+  chprintf(serp, "TEST DONE\r\n");
 }
 
 void compare_pads(void){
   int i,j;
-  //~ chprintf(SERIAL, "compare_pads\r\n");
+  //~ chprintf(serp, "compare_pads\r\n");
   for(i=0;i<5;i++){
     int tmp = (palReadPort(GPIOS[i]) &~ mask[i]) & 0xFFFF ;
     if(tmp != port_state[i]){
       int tmp2 = tmp ^ port_state[i];
-      chprintf(SERIAL, "<%c> 0x%04x 0x%04x!=0x%04x ",'A'+i,tmp2,tmp,port_state[i]);
+      chprintf(serp, "<%c> 0x%04x 0x%04x!=0x%04x ",'A'+i,tmp2,tmp,port_state[i]);
       for(j=0;j<15;j++){
         if( (tmp2 & (1<<j)) !=0 )
-          chprintf(SERIAL, "P%c%d=%d ",'A'+i,j,((tmp>>j) & 1) );
+          chprintf(serp, "P%c%d=%d ",'A'+i,j,((tmp>>j) & 1) );
         }
-      chprintf(SERIAL, "\r\n");
+      chprintf(serp, "\r\n");
       sd_flush(&SD1);
       port_state[i] = tmp;
     }
@@ -219,8 +219,8 @@ static THD_FUNCTION(Thread1, arg) {
     //~ chThdSleepMilliseconds(500);
     //~ palClearPad(GPIOC, GPIOC_LED);
     //~ chThdSleepMilliseconds(500);
-    //~ chprintf(SERIAL, "ilife!\r\n");
-    //~ chprintf(SERIAL, "PORT=%d PAD=%d\r\n",FPORT,FPAD);
+    //~ chprintf(serp, "ilife!\r\n");
+    //~ chprintf(serp, "PORT=%d PAD=%d\r\n",FPORT,FPAD);
     //~ sd_flush(&SD1);
 
     uint32_t i;
@@ -233,7 +233,7 @@ static THD_FUNCTION(Thread1, arg) {
                        &bldc_adc1_grp_for_tim1,
                        adc1_samples_buf,
                        1);
-    chprintf(SERIAL, "%d ",continuous_timer_get_micros_delta32(&timestate));
+    chprintf(serp, "%d ",continuous_timer_get_micros_delta32(&timestate));
 
     for(i=0; i < test; i++)
       adc1_samples_buf[15]+=adc1_samples_buf[15]/ i;
@@ -241,9 +241,9 @@ static THD_FUNCTION(Thread1, arg) {
 
     for(i=0;i<16;i++){
       if (i==10 || i==11 || i==12 || i==14 || i==1 || i==2 || i==3 || i==13 || i==5 || i==8 || i==0 || i==6) continue;
-      chprintf(SERIAL, "%02d=%04d ",i,adc1_samples_buf[i]);
+      chprintf(serp, "%02d=%04d ",i,adc1_samples_buf[i]);
     }
-    chprintf(SERIAL, " %lu\r\n",CONTINUOUS_TIMERD.millis);
+    chprintf(serp, " %lu\r\n",CONTINUOUS_TIMERD.millis);
     compare_pads();
     //~ chThdSleepMilliseconds(600);
     sd_flush(&SD1);
@@ -279,7 +279,7 @@ int main(void) {
   sdStart(&SD1, NULL);
   //~ palSetPadMode(GPIOA, GPIOA_PA09_USART1_TX, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
   //~ palSetPadMode(GPIOA, GPIOA_PA10_USART1_RX, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
-  chprintf(SERIAL, "hello ilife!\r\n");
+  chprintf(serp, "hello ilife!\r\n");
 
 
 
@@ -329,6 +329,7 @@ int main(void) {
    * sleeping in a loop and check the button state, when the button is
    * pressed the test procedure is launched.
    */
+  uint8_t aaa=0;
   while (true) {
     //~ compare_pads();
     //~ palTogglePort(GPIOB, 1<<GPIOB_PB10_GROUND_SENSORS_TX);
@@ -345,7 +346,7 @@ int main(void) {
       palSetPadMode(GPIOC, GPIOC_PC07, PAL_MODE_INPUT);
     }else if(c=='p'){
       palTogglePad(GPIOE, GPIOE_PE05_SLEEP);
-      chprintf(SERIAL,"sleep=%d\r\n",palReadPad(GPIOE, GPIOE_PE05_SLEEP));
+      chprintf(serp,"sleep=%d\r\n",palReadPad(GPIOE, GPIOE_PE05_SLEEP));
     }else if(c=='m'){
       if(motor_en == 0){
         pwmEnableChannel(&PWMD3, 0, 3500/2);//tim3-ch1
@@ -370,7 +371,8 @@ int main(void) {
     }
     */
     //else{
-      chThdSleepMilliseconds(500);
+      sd_printf(2,"hello from sd! t=%d aaa=%d\r\n",chVTGetSystemTimeX(),aaa++);
+      chThdSleepMilliseconds(50);
     //~ }
   }
 }
