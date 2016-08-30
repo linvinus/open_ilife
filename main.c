@@ -20,7 +20,7 @@
 #include "test.h"
 #include "chprintf.h"
 
-#include "serial_protocol_modules.h"
+#include "lib/serial_protocol/examples/serial_protocol_modules.h"
 
 BaseSequentialStream *serp = (BaseSequentialStream *) &SD1;
 
@@ -251,6 +251,21 @@ static THD_FUNCTION(Thread1, arg) {
   }
 }
 
+uint8_t on_RobotCFG_update(uint16_t data_size,uint8_t *data,void *arg){
+  (void) arg;//unused
+  (void) data_size;//constant,unused
+  
+  RobotCFG_t * cfg = (RobotCFG_t*) data;
+  //~ _serial_protocol_set_cmd_with_data(SP_PRINTF,"got on_RobotCFG_update\r\n",26,0);
+
+  sd_printf(SP_PRINTF,"%d %d %d %d\r\n",cfg->A,cfg->B,cfg->C,cfg->D);
+  cfg->A++;
+  cfg->B++;
+  cfg->C=cfg->A + cfg->A;
+  cfg->D=cfg->C + cfg->B;
+  sd_printf(SP_PRINTF,"%d %d %d %d\r\n",cfg->A,cfg->B,cfg->C,cfg->D);
+}
+
 /*
  * Application entry point.
  */
@@ -371,7 +386,8 @@ int main(void) {
     }
     */
     //else{
-      sd_printf(2,"hello from sd! t=%d aaa=%d\r\n",chVTGetSystemTimeX(),aaa++);
+      //~ sd_printf(SP_PRINTF,"hello from sd! t=%d aaa=%d\r\n",chVTGetSystemTimeX(),aaa++);
+      //~ _serial_protocol_set_cmd_with_data(SP_PRINTF,"hello raw data!\r\n",19,0);
       chThdSleepMilliseconds(50);
     //~ }
   }
