@@ -254,16 +254,43 @@ static THD_FUNCTION(Thread1, arg) {
 uint8_t on_RobotCFG_update(uint16_t data_size,uint8_t *data,void *arg){
   (void) arg;//unused
   (void) data_size;//constant,unused
-  
-  RobotCFG_t * cfg = (RobotCFG_t*) data;
-  //~ _serial_protocol_set_cmd_with_data(SP_PRINTF,"got on_RobotCFG_update\r\n",26,0);
 
-  sd_printf(SP_PRINTF,"%d %d %d %d\r\n",cfg->A,cfg->B,cfg->C,cfg->D);
+  RobotCFG_t * cfg = (RobotCFG_t*) data;
+  //~ _sprt_send_with_data(SP_PRINTF,"got on_RobotCFG_update\r\n",26,0);
+  sprt_printf(SP_PRINTF,"got: %d %d %d %d\r\n",cfg->A,cfg->B,cfg->C,cfg->D);
   cfg->A++;
   cfg->B++;
   cfg->C=cfg->A + cfg->A;
   cfg->D=cfg->C + cfg->B;
-  sd_printf(SP_PRINTF,"%d %d %d %d\r\n",cfg->A,cfg->B,cfg->C,cfg->D);
+  sprt_printf(SP_PRINTF,"new: %d %d %d %d\r\n",cfg->A,cfg->B,cfg->C,cfg->D);
+  return 0;//not used
+}
+
+void sd_protocol_inform_callback(uint8_t sequence,uint8_t cmd,uint8_t state){
+  char *c=NULL;
+  switch( SD_SEQ_SYSMES_MASK(sequence) ){
+    case   SP_OK:
+      //~ c="SP_OK";
+      return;
+    break;
+    case SP_UNKNOWNCMD:
+      c="SP_UNKNOWNCMD";
+    break;
+    case SP_WRONGCHECKSUMM:
+      c="SP_WRONGCHECKSUMM";
+    break;
+    case SP_WRONGSIZE:
+      c="SP_WRONGSIZE";
+    break;
+    case SP_VERSION:
+      c="SP_VERSION";
+    break;
+    default:
+      c="Unknown state!";
+  }
+
+  if(c != NULL)
+    sprt_printf(SP_PRINTF,"\r\nremote err cmd(%d)[%d]=%d %s\r\n",(uint8_t)SD_CMD_INDEX_MASK(cmd),(uint8_t)SD_SEQ_MASK(sequence),(uint8_t)state,c);
 }
 
 /*
@@ -336,7 +363,9 @@ int main(void) {
    */
   //chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
 
-  serial_protocol_thread_init();
+  sprt_thread_init();
+  //for protocol debugging
+  sprt_register_protocol_inform_func(sd_protocol_inform_callback);
 
 
   /*

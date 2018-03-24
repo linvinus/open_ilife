@@ -1,6 +1,8 @@
 
 #include "pid_int32t.h"
 
+#include <string.h> //memset
+
 void arm_pid_init_int32t(
   arm_pid_instance_int32t * S,
   const int16_t Kp,
